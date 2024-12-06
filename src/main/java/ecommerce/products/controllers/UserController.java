@@ -1,64 +1,55 @@
 package ecommerce.products.controllers;
 
+import ecommerce.products.exceptions.ResourceNotFoundException;
 import ecommerce.products.models.User;
 import ecommerce.products.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import ecommerce.products.services.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
 
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("api/user")
+@RequestMapping("api/users")
 public class UserController {
 
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user){
-        User saveuser = userRepository.save(user);
+        User saveuser = userService.addUser(user);
         return ResponseEntity.ok(saveuser);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id){
-        Optional<User> user = userRepository.findById(id);
-        if(user.isPresent()){
-            return ResponseEntity.ok(user.get());
-        }else {
-            return ResponseEntity.notFound().build();
-        }
-
+    public ResponseEntity<User> getUser(@PathVariable Long id)throws ResourceNotFoundException{
+        User user = userService.getUser(id);
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<User>> getAllUsers(){
-        List<User> users = userRepository.findAll();
-        if(users.isEmpty()){
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(users);
+    public ResponseEntity<Page<User>> getAllUsers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5" ) int size, @RequestParam(defaultValue = "id") String sortBy, @RequestParam(defaultValue = "asc") String direction) throws ResourceNotFoundException {
+       Pageable pageable = PageRequest.of(page,size, Sort.by(Sort.Direction.fromString(direction),sortBy));
+        Page<User> users = userService.allusers(pageable);
+       return ResponseEntity.ok(users);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user){
-        return userRepository.findById(id)
-                .map(existingUser -> {
-                    existingUser.updateDetails(user);
-                    return ResponseEntity.ok(userRepository.save(existingUser));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) throws ResourceNotFoundException {
+        User updatedUser = userService.updateUserDetails(id, user);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id){
-        return userRepository.findById(id).map(user ->{
-            userRepository.delete(user);
-            return ResponseEntity.ok("User deleted");
-        }).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found"));
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) throws ResourceNotFoundException{
+        boolean deletedUser = userService.deleteUser(id);
+        return ResponseEntity.ok("User deleted successfully");
     }
 
 }
