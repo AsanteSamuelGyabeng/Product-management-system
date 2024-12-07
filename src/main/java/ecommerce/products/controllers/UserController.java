@@ -5,6 +5,7 @@ import ecommerce.products.models.User;
 import ecommerce.products.repository.UserRepository;
 import ecommerce.products.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +19,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/users")
 public class UserController {
 
-    private final UserRepository userRepository;
-    private final UserService userService;
+    @Autowired
+    private  UserRepository userRepository;
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    public UserController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user){

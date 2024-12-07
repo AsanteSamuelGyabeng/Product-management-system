@@ -1,25 +1,70 @@
 package ecommerce.products.services;
 
+import ecommerce.products.binarytree.ProductBinaryTree;
 import ecommerce.products.exceptions.ResourceNotFoundException;
 import ecommerce.products.models.Product;
-import ecommerce.products.models.User;
 import ecommerce.products.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
-@RequiredArgsConstructor
 public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+    private final ProductBinaryTree productTree = new ProductBinaryTree();
+
+    @Autowired
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
+
+    @PostConstruct
+    public void initializeBinaryTree() {
+        List<Product> products = productRepository.findAll();
+        for (Product product : products) {
+            productTree.add(product); // Corrected to use the instance
+        }
+    }
+
+    /**
+     * @addProduct -add product to the database and binary tree
+     * @param product
+     * @return
+     */
+    public Product addProduct(Product product) {
+        Product savedProduct = productRepository.save(product);
+        productTree.add(savedProduct);
+        return savedProduct;
+    }
+
+
+    /**
+     * @searchProductsByPrice - search products by price
+     * @param price
+     * @param page
+     * @param size
+     * @param sort
+     * @return
+     */
+    public Page<Product> searchProductsByPrice(BigDecimal price, int page, int size,String sort,String direction) {
+
+        Pageable pageable = PageRequest.of(page,size, Sort.by(Sort.Direction.fromString(direction),sort));
+
+        return productRepository.findAllByPrice(price, pageable);
+    }
+
+
 
     /**
      * @updateShopProducts - update shop products
@@ -33,7 +78,6 @@ public class ProductService {
 
         if (findProduct.isPresent()) {
             Product existingProduct = findProduct.get();
-
             existingProduct.setName(product.getName());
             existingProduct.setDescription(product.getDescription());
             existingProduct.setStocks(product.getStocks());
@@ -91,6 +135,7 @@ public class ProductService {
             throw new ResourceNotFoundException("No products found");
         }
     }
+
 
 }
 
