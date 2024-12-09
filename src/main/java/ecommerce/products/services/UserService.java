@@ -4,7 +4,6 @@ import ecommerce.products.exceptions.ResourceNotFoundException;
 import ecommerce.products.exceptions.UserAlreadyExistsException;
 import ecommerce.products.models.User;
 import ecommerce.products.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,19 +11,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @Service
 public class UserService {
     Logger log = LoggerFactory.getLogger(UserService.class);
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+    public Optional<User> authenticate(String username, String password) {
+        return userRepository.findByUsername(username)
+                .filter(user -> user.getPassword().equals(password));
     }
 
     /**
@@ -64,7 +64,7 @@ public class UserService {
      * @throws UserAlreadyExistsException
      */
     public User addUser(User user){
-        Optional<User> userOptional = userRepository.findByEmail(user.getEmail());
+        Optional<User> userOptional = userRepository.findByUsername(user.getUsername());
         if(userOptional.isPresent()){
             log.info("user already exists");
             throw new UserAlreadyExistsException("user already exists");
@@ -84,7 +84,7 @@ public class UserService {
         Optional<User> userOptional = userRepository.findById(id);
         if(userOptional.isPresent()){
             User existingUser = userOptional.get();
-            existingUser.setName(user.getName());
+            existingUser.setUsername(user.getUsername());
             existingUser.setEmail(user.getEmail());
             existingUser.setPassword(user.getPassword());
             return userRepository.save(existingUser);

@@ -2,7 +2,9 @@ package ecommerce.products.controllers;
 
 import ecommerce.products.exceptions.ResourceNotFoundException;
 import ecommerce.products.models.Product;
+import ecommerce.products.models.mongo.Products;
 import ecommerce.products.repository.ProductRepository;
+import ecommerce.products.repository.mongorepo.MongoProductRepository;
 import ecommerce.products.services.ProductService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,10 @@ public class ProductController {
 
 @Autowired
    private ProductRepository productRepository;
+   private MongoProductRepository mongoProductRepository;
    private final ProductService productService;
+
+
     @Autowired
     public ProductController(ProductService productService) {
         this.productService = productService;
@@ -51,10 +56,9 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "asc") String direction) {
-
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
         Page<Product> products = productService.searchProductsByPrice(price, page, size, sort,direction);
-
         if (!products.isEmpty()) {
             return ResponseEntity.ok(products);
         } else {
