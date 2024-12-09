@@ -14,23 +14,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("api/users")
 public class UserController {
 
-    @Autowired
-    private  UserRepository userRepository;
-    @Autowired
-    private UserService userService;
+    private final UserRepository userRepository;
+    private final UserService userService;
 
-    @Autowired
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, UserService userService) {
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
-
-    @PostMapping
+    @PostMapping("/adduser")
     public ResponseEntity<User> createUser(@RequestBody User user){
         User saveuser = userService.addUser(user);
         return ResponseEntity.ok(saveuser);
@@ -57,7 +53,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) throws ResourceNotFoundException{
-        boolean deletedUser = userService.deleteUser(id);
+        userService.deleteUser(id);
         return ResponseEntity.ok("User deleted successfully");
     }
 

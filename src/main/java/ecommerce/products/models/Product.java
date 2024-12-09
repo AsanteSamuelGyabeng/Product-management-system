@@ -23,6 +23,7 @@ public class Product {
     private String name;
     private String description;
     private int stocks;
+    private String category;
     private BigDecimal price;
     private boolean available;
 
@@ -96,5 +97,9 @@ public class Product {
 
     public void setDateCreated(LocalDateTime dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public String getCategory() {
+        return category;
     }
 }
